@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tierravision Command Centers</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0A0F1C;
+            color: #E5E5E5;
+        }
+
+        .command-center {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .center-nav {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(0, 240, 255, 0.05);
+            border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+        }
+
+        .center-button {
+            background: transparent;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            color: #00F0FF;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .center-button:hover {
+            background: rgba(0, 240, 255, 0.1);
+        }
+
+        .center-button.active {
+            background: rgba(0, 240, 255, 0.2);
+            border-color: #00F0FF;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 1rem;
+            padding: 1rem;
+            flex-grow: 1;
+        }
+
+        .sidebar {
+            background: rgba(0, 240, 255, 0.05);
+            border-right: 1px solid rgba(0, 240, 255, 0.2);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .alerts-section {
+            flex-grow: 1;
+        }
+
+        .alerts-section h3 {
+            margin-bottom: 1rem;
+            color: #00F0FF;
+            font-size: 1.2rem;
+        }
+
+        .alert {
+            background: rgba(255, 59, 48, 0.1);
+            border-left: 4px solid #FF3B30;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .metrics-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .metric-card {
+            background: rgba(10, 15, 28, 0.9);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            padding: 1rem;
+            border-radius: 4px;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00F0FF;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: #A0A0A0;
+        }
+
+        .live-feed {
+            background: rgba(10, 15, 28, 0.9);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            padding: 1rem;
+            position: relative;
+            height: 600px;
+            overflow: hidden;
+        }
+
+        .detection-box {
+            position: absolute;
+            border: 2px solid #00F0FF;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+            pointer-events: none;
+            opacity: 0;
+            animation: detect 2s ease-out forwards;
+        }
+
+        @keyframes detect {
+            0% { opacity: 0; transform: scale(0.8); }
+            20% { opacity: 1; transform: scale(1); }
+            80% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.8); }
+        }
+
+        .chart-container {
+            height: 200px;
+            background: rgba(10, 15, 28, 0.9);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            padding: 1rem;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="command-center">
+        <nav class="center-nav">
+            <button class="center-button active" data-center="retail">Retail Analytics</button>
+            <button class="center-button" data-center="mining">Mining Operations</button>
+            <button class="center-button" data-center="infrastructure">Infrastructure</button>
+            <button class="center-button" data-center="government">Smart City</button>
+        </nav>
+
+        <div class="dashboard-grid">
+            <aside class="sidebar">
+                <div class="alerts-section">
+                    <h3>Live Alerts</h3>
+                    <div id="alerts-container"></div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="activity-chart"></canvas>
+                </div>
+            </aside>
+
+            <main class="main-content">
+                <div class="metrics-bar">
+                    <div class="metric-card">
+                        <div class="metric-value" id="metric-1">0</div>
+                        <div class="metric-label">Real-time Visitors</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="metric-2">0%</div>
+                        <div class="metric-label">Conversion Rate</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="metric-3">0</div>
+                        <div class="metric-label">Active Cameras</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="metric-4">0</div>
+                        <div class="metric-label">Incidents Today</div>
+                    </div>
+                </div>
+                <div class="live-feed" id="live-feed"></div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Configuration for different centers
+        const centerConfig = {
+            retail: {
+                metrics: {
+                    labels: ['Real-time Visitors', 'Conversion Rate', 'Active Cameras', 'Incidents Today'],
+                    ranges: [
+                        [100, 500],
+                        [15, 35],
+                        [20, 50],
+                        [0, 5]
+                    ]
+                },
+                alerts: [
+                    "Queue length exceeded threshold at Checkout 3",
+                    "High traffic detected in Electronics section",
+                    "Stock level alert in Aisle 7",
+                    "Security event detected at Entry B"
+                ],
+                color: '#4CAF50'
+            },
+            mining: {
+                metrics: {
+                    labels: ['Active Personnel', 'Equipment Efficiency', 'Active Cameras', 'Safety Incidents'],
+                    ranges: [
+                        [50, 200],
+                        [80, 95],
+                        [40, 100],
+                        [0, 3]
+                    ]
+                },
+                alerts: [
+                    "PPE violation detected in Zone 4",
+                    "Vehicle speed alert in Sector B",
+                    "Restricted area access at Mine Shaft 2",
+                    "Equipment maintenance alert for Excavator 3"
+                ],
+                color: '#FFC107'
+            }
+        };
+
+        let activityChart = null;
+        let currentCenter = 'retail';
+        let alertInterval = null;
+        let metricInterval = null;
+
+        // Initialize the dashboard
+        function initDashboard(centerType) {
+            // Clear existing intervals
+            if (alertInterval) clearInterval(alertInterval);
+            if (metricInterval) clearInterval(metricInterval);
+            
+            // Update metrics
+            updateMetrics(centerType);
+            
+            // Initialize alerts
+            initializeAlerts(centerType);
+            
+            // Initialize activity chart
+            initializeChart(centerType);
+            
+            // Initialize live feed
+            initializeLiveFeed(centerType);
+        }
+
+        // Initialize activity chart
+        function initializeChart(centerType) {
+            const ctx = document.getElementById('activity-chart').getContext('2d');
+            
+            if (activityChart) {
+                activityChart.destroy();
+            }
+
+            activityChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array(24).fill('').map((_, i) => `${i}:00`),
+                    datasets: [{
+                        label: 'Activity Level',
+                        data: Array(24).fill(0).map(() => Math.random() * 100),
+                        borderColor: centerConfig[centerType].color,
+                        tension: 0.4,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 240, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0, 240, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update metrics
+        function updateMetrics(centerType) {
+            const config = centerConfig[centerType];
+            
+            metricInterval = setInterval(() => {
+                config.metrics.ranges.forEach((range, index) => {
+                    const value = Math.floor(Math.random() * (range[1] - range[0]) + range[0]);
+                    const element = document.getElementById(`metric-${index + 1}`);
+                    element.textContent = index === 1 ? `${value}%` : value;
+                });
+            }, 2000);
+        }
+
+        // Initialize alerts
+        function initializeAlerts(centerType) {
+            const alertsContainer = document.getElementById('alerts-container');
+            let currentAlerts = [...centerConfig[centerType].alerts];
+            
+            alertInterval = setInterval(() => {
+                if (currentAlerts.length === 0) {
+                    currentAlerts = [...centerConfig[centerType].alerts];
+                }
+                
+                const alert = document.createElement('div');
+                alert.className = 'alert';
+                alert.textContent = currentAlerts.pop();
+                
+                alertsContainer.insertBefore(alert, alertsContainer.firstChild);
+                
+                if (alertsContainer.children.length > 5) {
+                    alertsContainer.removeChild(alertsContainer.lastChild);
+                }
+            }, 3000);
+        }
+
+        // Initialize live feed
+        function initializeLiveFeed(centerType) {
+            const feed = document.getElementById('live-feed');
+            feed.innerHTML = '';
+            
+            setInterval(() => {
+                const box = document.createElement('div');
+                box.className = 'detection-box';
+                box.style.left = `${Math.random() * 80}%`;
+                box.style.top = `${Math.random() * 80}%`;
+                box.style.width = `${Math.random() * 100 + 50}px`;
+                box.style.height = `${Math.random() * 100 + 50}px`;
+                
+                feed.appendChild(box);
+                setTimeout(() => box.remove(), 2000);
+            }, 1000);
+        }
+
+        // Event listeners
+        document.querySelectorAll('.center-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const centerType = e.target.dataset.center;
+                
+                // Update active button
+                document.querySelectorAll('.center-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                e.target.classList.add('active');
+                
+                // Clear existing content
+                document.getElementById('alerts-container').innerHTML = '';
+                document.getElementById('live-feed').innerHTML = '';
+                
+                // Initialize new center
+                currentCenter = centerType;
+                initDashboard(centerType);
+            });
+        });
+
+        // Initial setup
+        initDashboard('retail');
+    </script>
+</body>
+</html>
