@@ -387,3 +387,115 @@
     </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tierravision Command Centers</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        /* Estilo existente */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0A0F1C;
+            color: #E5E5E5;
+        }
+        .alerts-section {
+            flex-grow: 1;
+        }
+        .alerts-section h3 {
+            margin-bottom: 1rem;
+            color: #00F0FF;
+            font-size: 1.2rem;
+        }
+        .alert {
+            background: rgba(255, 59, 48, 0.1);
+            border-left: 4px solid #FF3B30;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        #alert-image {
+            margin-top: 1rem;
+            text-align: center;
+        }
+        #alert-image img {
+            width: 100%;
+            max-height: 300px;
+            display: none;
+            border: 1px solid #00F0FF;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="command-center">
+        <aside class="sidebar">
+            <div class="alerts-section">
+                <h3>Live Alerts</h3>
+                <div id="alerts-container"></div>
+                <div id="alert-image">
+                    <img src="" alt="Alert Image" id="alert-image-display" />
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // Configuración de alertas con imágenes asociadas
+        const alertImages = {
+            "Queue length exceeded threshold at Checkout 3": "images/alerts/queue_checkout.png",
+            "High traffic detected in Electronics section": "images/alerts/high_traffic_electronics.png",
+            "Stock level alert in Aisle 7": "images/alerts/low_stock.png",
+            "Security event detected at Entry B": "images/alerts/security_event.png",
+            "PPE violation detected in Zone 4": "images/alerts/ppe_violation.png",
+            "Vehicle speed alert in Sector B": "images/alerts/vehicle_speed_alert.png",
+            "Restricted area access at Mine Shaft 2": "images/alerts/restricted_access.png",
+            "Equipment maintenance alert for Excavator 3": "images/alerts/equipment_maintenance.png"
+        };
+
+        const alerts = Object.keys(alertImages); // Lista de alertas predefinidas
+        let currentAlertIndex = 0;
+
+        function updateAlert() {
+            const alertsContainer = document.getElementById('alerts-container');
+            const alertImageDisplay = document.getElementById('alert-image-display');
+
+            // Selecciona la siguiente alerta
+            const currentAlert = alerts[currentAlertIndex];
+            currentAlertIndex = (currentAlertIndex + 1) % alerts.length;
+
+            // Crea el elemento de alerta
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert';
+            alertDiv.textContent = currentAlert;
+
+            // Añade la alerta al contenedor
+            alertsContainer.insertBefore(alertDiv, alertsContainer.firstChild);
+
+            // Limita el número de alertas visibles
+            if (alertsContainer.children.length > 5) {
+                alertsContainer.removeChild(alertsContainer.lastChild);
+            }
+
+            // Muestra la imagen correspondiente
+            const imagePath = alertImages[currentAlert];
+            if (imagePath) {
+                alertImageDisplay.src = imagePath;
+                alertImageDisplay.style.display = 'block';
+            } else {
+                alertImageDisplay.style.display = 'none';
+            }
+        }
+
+        // Intervalo para cambiar las alertas
+        setInterval(updateAlert, 3000);
+    </script>
+</body>
+</html>
